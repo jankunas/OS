@@ -16,22 +16,19 @@ public class Logger {
 	static {
 		try {
 			logFile.createNewFile();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void log(String message){
-		if(!logFile.exists()){
+	public static void log(String message) {
+		if (!logFile.exists()) {
 			throw new IllegalArgumentException(LOG_FILE_DOES_NOT_EXIST);
-		}
-		else{
+		} else {
 			System.out.println(message);
-			try(BufferedWriter bw = new BufferedWriter(new FileWriter(logFile, true))){
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(logFile, true))) {
 				bw.write(message + System.lineSeparator());
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}

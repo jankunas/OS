@@ -2,17 +2,14 @@ package lt.kurti.rm;
 
 import static lt.kurti.constants.Constants.SHUTDOWN_COMMAND;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import lt.kurti.cli.CLI;
+import lt.kurti.memory.ExternalMemory;
 import lt.kurti.vm.VirtualMachine;
 
 public class PhysicalMachine {
 
 	private static PhysicalMachine instance = null;
 
-	//List of Registers
 	public static int R1;
 	public static int R2;
 	public static int PTR;
@@ -34,16 +31,10 @@ public class PhysicalMachine {
 
 	public static Memory memory;
 	public static SupervisorMemory supervisorMemory;
-	public static HDD hdd;
 
 	static {
-		try {
-			hdd = new HDD();
-			supervisorMemory = new SupervisorMemory();
-			memory = new Memory();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		supervisorMemory = new SupervisorMemory();
+		memory = new Memory();
 	}
 
 	private PhysicalMachine() {
@@ -60,14 +51,12 @@ public class PhysicalMachine {
 	public void run(final CLI cli) {
 		final VirtualMachine virtualMachine = new VirtualMachine();
 		updateMode(cli.getUserInputForMode());
-
 		while (true) {
 			final String userInput = cli.getUserInput();
 			if (SHUTDOWN_COMMAND.equals(userInput)) {
 				break;
 			} else if (userInput != null) {
-				readFromExternalMemory(userInput);
-				PD("0");
+				ExternalMemory.readToSupervisorMemory(userInput);
 				moveMemory("0");
 				virtualMachine.processCommands();
 				break;
@@ -159,8 +148,8 @@ public class PhysicalMachine {
 	}
 
 	public static void setCH1(byte state) {
-		channelHelper(state, "CH1:0. FlashMemory channel freed",
-				"CH1:1. FlashMemory channel busy - transferring data");
+		channelHelper(state, "CH1:0. External input channel freed",
+				"CH1:1. External input channel busy - waiting for user input");
 		if (state == 0 || state == 1)
 			CH1 = state;
 	}
@@ -181,8 +170,8 @@ public class PhysicalMachine {
 	}
 
 	public static void setCH3(byte state) {
-		channelHelper(state, "CH3:0. Supervisor-HDD channel freed",
-				"CH3:1. Supervisor-HDD channel busy - transferring data");
+		channelHelper(state, "CH3:0. External device channel freed",
+				"CH3:1. External device channel busy - transferring data");
 		if (state == 0 || state == 1)
 			CH3 = state;
 	}
@@ -199,7 +188,6 @@ public class PhysicalMachine {
 				break;
 		}
 	}
-
 
 	public static byte getPI() {
 		return PI;
@@ -301,20 +289,6 @@ public class PhysicalMachine {
 		return memory;
 	}
 
-	//reads from external memory to HDD
-	public void readFromExternalMemory(final String externalFileName) {
-		setCH1((byte) 1);
-		ExternalMemory.readToHDD(externalFileName);
-		setCH1((byte) 0);
-		if (getMODE() == 0) {
-			try {
-				System.in.read();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	public static void writeToPrinter(Object o) {
 		setCH2((byte) 1);
 		Printer.print(o);
@@ -328,31 +302,9 @@ public class PhysicalMachine {
 		setSI((byte) 0);
 	}
 
-	//PDx - SI tampa 1 ir valdymas perduodamas OS, duomenų kopijavimui iš kietojo disko į supervizorinės atminties vietą x.
-	public static void PD(String address) {
-		setSI((byte) 1);
-		setCH3((byte) 1);
-
-		int block = Integer.parseInt(address);
-		for (int i = 0; i < HDD.usedSectors.size(); ++i) {
-			supervisorMemory.writeBlock(HDD.read(HDD.usedSectors.get(i)), block);
-			block++;
-		}
-		setCH3((byte) 0);
-		setSI((byte) 0);
-		System.out.println("Data was loaded from HDD to supervisor memory");
-		if (getMODE() == 0) {
-			try {
-				System.in.read();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	//Perkelia duomenis is supervizorines atminties i pagrindine
 	public static void moveMemory(String address) {
-		System.out.println("move memory from supervisor to main memory");
+		System.out.println("Moving memory from supervisor to main memory");
 		boolean dataSeg = false;
 		boolean codeSeg = false;
 
@@ -425,7 +377,4 @@ public class PhysicalMachine {
 				"+------------------+";
 
 	}
-
-
-
 }

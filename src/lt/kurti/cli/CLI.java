@@ -5,6 +5,8 @@ import static lt.kurti.constants.Constants.START_COMMAND;
 
 import java.util.Scanner;
 
+import lt.kurti.rm.PhysicalMachine;
+
 
 public class CLI {
 
@@ -18,8 +20,10 @@ public class CLI {
 		System.out.println("Enter MODE:");
 		System.out.println("0. User mode");
 		System.out.println("1. Supervisor mode");
-
-		return Integer.parseInt(keyboard.nextLine());
+		PhysicalMachine.setCH1((byte) 1);
+		final int userInput = Integer.parseInt(keyboard.nextLine());
+		PhysicalMachine.setCH1((byte) 0);
+		return userInput;
 	}
 
 	public String getUserInput() {
@@ -28,7 +32,9 @@ public class CLI {
 		System.out.println("START <FILE_NAME>");
 		System.out.println("OR shutdown the OS:");
 		System.out.println("SHUTDOWN");
+		PhysicalMachine.setCH1((byte) 1);
 		final String userInput = keyboard.nextLine();
+		PhysicalMachine.setCH1((byte) 0);
 
 		if (userInput.contains(START_COMMAND)) {
 			return userInput.substring(START_COMMAND.length() + 1);
