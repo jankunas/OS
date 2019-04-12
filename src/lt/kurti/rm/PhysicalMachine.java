@@ -31,6 +31,7 @@ public class PhysicalMachine {
 
 	public static Memory memory;
 	public static SupervisorMemory supervisorMemory;
+	private static CLI cli;
 
 	static {
 		supervisorMemory = new SupervisorMemory();
@@ -49,6 +50,8 @@ public class PhysicalMachine {
 	}
 
 	public void run(final CLI cli) {
+		this.cli = cli;
+		//perkelti
 		final VirtualMachine virtualMachine = new VirtualMachine();
 		updateMode(cli.getUserInputForMode());
 		while (true) {

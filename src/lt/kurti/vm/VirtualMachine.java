@@ -1,8 +1,8 @@
 package lt.kurti.vm;
 
 import lt.kurti.rm.Memory;
-import lt.kurti.rm.Printer;
 import lt.kurti.rm.PhysicalMachine;
+import lt.kurti.rm.Printer;
 
 public class VirtualMachine {
 
@@ -49,23 +49,22 @@ public class VirtualMachine {
 		System.out.println("Resolve command: " + line);
 		if (line.equals("HALT")) {
 			PhysicalMachine.HALT();
-		} 
-		else if (line.substring(0, 3).equals("ADD")) {
+		} else if (line.substring(0, 3).equals("ADD")) {
 			ADD();
 		} else if (line.substring(0, 3).equals("SUB")) {
 			SUB();
 		} else if (line.substring(0, 2).equals("AD")) {
-			AD(Integer.parsInt(line.substring(2,4)));
+			AD(Integer.parseInt(line.substring(2, 4)));
 		} else if (line.substring(0, 2).equals("SB")) {
-			SB(Integer.parsInt(line.substring(2,4)));
+			//SB(Integer.parseInt(line.substring(2, 4)));
 		} else if (line.substring(0, 4).equals("COMP")) {
 			CMP();
-		} else if (line.substring(0,2).equals("LX")) {
-			LX(Integer.parsInt(line.substring(2,4)))
+		} else if (line.substring(0, 2).equals("LX")) {
+//			LX(Integer.parseInt(line.substring(2,4)));
 		} else if (line.substring(0, 2).equals("LW")) {
-			LW();
+			LW(Integer.parseInt(line.substring(2, 3)));
 		} else if (line.substring(0, 2).equals("LR")) {
-			LR(Integer.parseInt(line.substring(2, 3)));
+			LR(line.substring(2, 3));
 		} else if (line.substring(0, 2).equals("PM")) {
 			SX(Integer.parseInt(line.substring(2, 4)));
 		} else if (line.substring(0, 2).equals("LR")) {
@@ -79,25 +78,24 @@ public class VirtualMachine {
 		} else if (line.substring(0, 2).equals("JL")) {
 			JL(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JN")) {
-			JN(line.substring(2, 4));
+			//JN(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JC")) {
-            JC(line.substring(2, 4));
-        } else if (line.substring(0, 2).equals("JO")) {
-            JO(line.substring(2, 4));
-        } else if (line.substring(0, 2).equals("LP")) {
-        	LP(Integer.parseInt(line.substring(2, 4)));
-        } else if (line.substring(0, 3).equals("AND")){
-        	AND();
-        } else if (line.substring(0, 2).equals("OR")) {
-        	OR();
-        } else if (line.substring(0, 2).equals("NR")) {
-        	NOT(line.substring(2,3));
-        } else if (line.substring(0, 3).equals("XOR")) {
-        	XOR();
-        } else if (line.substring(0, 1).equals("I")) {
-        	INTER(Integer.parseInt(line.substring(1,4)));
-        }
-		else {
+			//JC(line.substring(2, 4));
+		} else if (line.substring(0, 2).equals("JO")) {
+			//JO(line.substring(2, 4));
+		} else if (line.substring(0, 2).equals("LP")) {
+			//LP(Integer.parseInt(line.substring(2, 4)));
+		} else if (line.substring(0, 3).equals("AND")) {
+			//AND();
+		} else if (line.substring(0, 2).equals("OR")) {
+			//OR();
+		} else if (line.substring(0, 2).equals("NR")) {
+			//NOT(line.substring(2,3));
+		} else if (line.substring(0, 3).equals("XOR")) {
+			//XOR();
+		} else if (line.substring(0, 1).equals("I")) {
+			INTER(Integer.parseInt(line.substring(1, 4)));
+		} else {
 			// 2 - neatpažintas operacijos kodas
 			PhysicalMachine.setPI((byte) 2);
 			throw new Exception("PAKEIST I TINKAMA. NEATPAZINTA KOMANDA");
@@ -138,7 +136,7 @@ public class VirtualMachine {
 			setOF();
 			return;
 		} else {
-			R1 + R2;
+			R1 += R2;
 		}
 		if (((R1 >> 6) & 1) == 1) {
 			setSF();
@@ -147,7 +145,7 @@ public class VirtualMachine {
 	}
 
 	// Padalina R1 iš R2, įrašoma į R1. Jeigu reikšmės ženklo bitas yra 1, SF = 1.
-	public void DIV() {
+	public void SB() {
 		R1 /= R2;
 		if (((R1 >> 6) & 1) == 1) {
 			setSF();
@@ -167,16 +165,7 @@ public class VirtualMachine {
 
 	//LWx1x2 - į registrą R1 užkrauna žodį nurodytu adresu 16 * x1 + x2.
 	public void LW(int address) {
-		int block = address / 16;
-		int offset = (address - 64) % 16;
-
-		char[] word = new char[4];
-		int j = 0;
-		for (int i = offset; i < offset + 4; ++i) {
-			word[j] = memory.getBlock(block)[i];
-			j++;
-		}
-		R1 = Integer.parseInt(new String(word));
+		R1 = address;
 		++IC;
 	}
 
@@ -188,7 +177,7 @@ public class VirtualMachine {
 		char[] word = new char[4];
 		int j = 0;
 		for (int i = offset; i < offset + 4; ++i) {
-			memory[block+offset] = word[j];
+			word[j] = memory.getBlock(block)[i];
 			j++;
 		}
 		R2 = Short.parseShort(new String(word));
@@ -222,17 +211,12 @@ public class VirtualMachine {
 
 	//LRXX- išveda į printerį XX registrą (R1 arba R2)
 	public void LR(String register) {
-		if (register.equals("R1")) {
-			Printer.print(PhysicalMachine.getR1());
-		}
-		if (register.equals("R2")) {
-			Printer.print(PhysicalMachine.getR1());
-		}
+		R2 = R1;
 		++IC;
 	}
 
 	//Isveda i ekrana atminties 4 baitus
-	public void PM(int address) {
+	public void SX(int address) {
 
 		int block = address / 16;
 		int offset = (address - 64) % 16;
@@ -253,8 +237,9 @@ public class VirtualMachine {
 	//    ++IC;
 	//}
 
-	//JMx1x2 - besąlyginio valdymo perdavimo komanda. Ji reiškia, kad valdymas turi būti perduotas kodo segmento žodžiui, nurodytam adresu 16 * x1 + x2
-	public void JM(String address) {
+	//JMx1x2 - besąlyginio valdymo perdavimo komanda. Ji reiškia, kad valdymas turi būti perduotas kodo segmento žodžiui, nurodytam adresu 16 * x1
+	// + x2
+	public void JP(String address) {
 		++IC;
 	}
 
@@ -288,36 +273,30 @@ public class VirtualMachine {
 		IC = Short.parseShort(address, 16);
 	}
 
-	public INTER(int param){
-		byte z = param/100;
-		byte y = param%10;
-		param/=10;
-		byte x = param%10;
+	public void INTER(int param) {
+		int z = param / 100;
+		int y = param % 10;
+		param /= 10;
+		int x = param % 10;
 
-		if(z == 0){
-			byte [] strInBytes = (PhysicalMachine.readFromInput(1)).getBytes();
-			for(int i=0; i<y; ++i){
-				memory[x*16+y][i] = strInBytes[i];	
+		if (z == 0) {
+			char[] strInBytes = (PhysicalMachine.readFromInput(1)).toCharArray();
+			memory.writeBlock(strInBytes, memory.getBlock(x * 16)[y]);
+		} else if (z == 1) {
+			char[] strInBytes = (PhysicalMachine.readFromInput(y)).toCharArray();
+			for (int i = 0; i < y; ++i) {
+				memory.writeBlock(strInBytes, memory.getBlock(x * 16)[i]);
 			}
-			 
-		} else if(z == 1){
-			byte [] strInBytes = (PhysicalMachine.readFromInput(y)).getBytes();
-			for(int i=0; i<y; ++i){
-				for(int j=0; j<4; ++j){
-					memory[x*16+i][j] = strInBytes[j];
-				}	
-			}
-		} else if(z == 2){
-			PhysicalMachine.writeToPrinter(memory[16*x+y]);
-		} else if(z == 3){
-			for(int i=0; i<y; ++i){
-				PhysicalMachine.writeToPrinter(memory[16*x]);
+		} else if (z == 2) {
+			PhysicalMachine.writeToPrinter(memory.getBlock(16 * x)[y]);
+		} else if (z == 3) {
+			for (int i = 0; i < y; ++i) {
+				PhysicalMachine.writeToPrinter(memory.getBlock(16 * x)[i]);
 			}
 		} /*else if(z=='x'){
 			byte [] strInBytes = (PhysicalMachine.readFromInput(1)).getBytes();
 			R1 = strInBytes;
-		}*/
-		else{
+		}*/ else {
 			PhysicalMachine.writeToPrinter("Wrong command");
 		}
 
@@ -370,7 +349,7 @@ public class VirtualMachine {
 
 	@Override
 	public String toString() {
-		return  "+------------------+" + '\n' +
+		return "+------------------+" + '\n' +
 				"|       VM         |" + '\n' +
 				"+------------------+" + '\n' +
 				"| IC: " + getIC() + '\n' +
