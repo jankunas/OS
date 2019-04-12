@@ -295,6 +295,13 @@ public class PhysicalMachine {
 		setCH2((byte) 0);
 	}
 
+	public static String readFromInput(int length) {
+		setCH1((byte) 1);
+		String input = cli.readFromInput();
+		String output = input.substring(0,4);
+		setCH1((byte) 0);
+		return output;
+	}
 	//HALT - programos sustojimo taško komanda, t.y. programos valdymo pabaiga.
 	public static void HALT() throws Exception {
 		setSI((byte) 3);
@@ -353,6 +360,10 @@ public class PhysicalMachine {
 		//ir irasyt i hdd
 		setCH1((byte) 0);
 		setSI((byte) 0);
+	}
+
+	public static void test(){
+		//TODO
 	}
 
 	//    @Override

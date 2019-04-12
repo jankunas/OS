@@ -45,4 +45,8 @@ public class CLI {
 		System.out.println("Invalid input.");
 		return null;
 	}
+
+	public String readFromInput(){
+		return keyboard.nextLine();
+	}
 }

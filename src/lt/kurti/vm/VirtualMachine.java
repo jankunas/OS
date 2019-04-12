@@ -6,8 +6,9 @@ import lt.kurti.rm.PhysicalMachine;
 
 public class VirtualMachine {
 
-	private byte C;
+	private byte SF, IOI;
 	private short IC;
+	private int R1, R2;
 
 	private Memory memory;
 
@@ -48,56 +49,54 @@ public class VirtualMachine {
 		System.out.println("Resolve command: " + line);
 		if (line.equals("HALT")) {
 			PhysicalMachine.HALT();
-		} else if (line.substring(0, 3).equals("ADD")) {
+		} 
+		else if (line.substring(0, 3).equals("ADD")) {
 			ADD();
 		} else if (line.substring(0, 3).equals("SUB")) {
 			SUB();
-		} else if (line.substring(0, 3).equals("MUL")) {
-			MUL();
-		} else if (line.substring(0, 3).equals("DIV")) {
-			DIV();
-		} else if (line.substring(0, 3).equals("CMP")) {
+		} else if (line.substring(0, 2).equals("AD")) {
+			AD(Integer.parsInt(line.substring(2,4)));
+		} else if (line.substring(0, 2).equals("SB")) {
+			SB(Integer.parsInt(line.substring(2,4)));
+		} else if (line.substring(0, 4).equals("COMP")) {
 			CMP();
+		} else if (line.substring(0,2).equals("LX")) {
+			LX(Integer.parsInt(line.substring(2,4)))
 		} else if (line.substring(0, 2).equals("LW")) {
-			LW(Integer.parseInt(line.substring(2, 4)) + 64);
-		} else if (line.substring(0, 2).equals("LE")) {
-			LE(Integer.parseInt(line.substring(2, 4), 16) + 64);
+			LW();
+		} else if (line.substring(0, 2).equals("LR")) {
+			LR(Integer.parseInt(line.substring(2, 3)));
 		} else if (line.substring(0, 2).equals("PM")) {
-			PM(Integer.parseInt(line.substring(2, 4), 16) + 64);
-		}
-        /*else if (line.substring(0, 2).equals("LS")) {
-            LS(line.substring(3, 4));
-        }
-        else if (line.substring(0, 2).equals("LX")) {
-            LX(line.substring(3, 4));
-        }
-         else if (line.substring(0, 2).equals("LY")) {
-            LY(line.substring(3, 4));*
-        }
-        else if (line.substring(0, 2).equals("LL")) {
-            LL(line.substring(3, 4));
-        }
-        */
-		else if (line.substring(0, 2).equals("LR")) {
+			SX(Integer.parseInt(line.substring(2, 4)));
+		} else if (line.substring(0, 2).equals("LR")) {
 			LR(line.substring(2, 4));
-		} else if (line.substring(0, 2).equals("JM")) {
-			JM(line.substring(3, 4));
+		} else if (line.substring(0, 2).equals("JP")) {
+			JP(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JE")) {
-			JE(line.substring(3, 4));
+			JE(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JG")) {
-			JG(line.substring(3, 4));
+			JG(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JL")) {
-			JL(line.substring(3, 4));
-		} else if (line.substring(0, 2).equals("IC")) {
-			IC(line.substring(3, 4));
-		}
-        /*else if (line.substring(0, 2).equals("PD")) {
-            PD();
+			JL(line.substring(2, 4));
+		} else if (line.substring(0, 2).equals("JN")) {
+			JN(line.substring(2, 4));
+		} else if (line.substring(0, 2).equals("JC")) {
+            JC(line.substring(2, 4));
+        } else if (line.substring(0, 2).equals("JO")) {
+            JO(line.substring(2, 4));
+        } else if (line.substring(0, 2).equals("LP")) {
+        	LP(Integer.parseInt(line.substring(2, 4)));
+        } else if (line.substring(0, 3).equals("AND")){
+        	AND();
+        } else if (line.substring(0, 2).equals("OR")) {
+        	OR();
+        } else if (line.substring(0, 2).equals("NR")) {
+        	NOT(line.substring(2,3));
+        } else if (line.substring(0, 3).equals("XOR")) {
+        	XOR();
+        } else if (line.substring(0, 1).equals("I")) {
+        	INTER(Integer.parseInt(line.substring(1,4)));
         }
-         else if (line.substring(0, 2).equals("GD")) {
-            GD(line.substring(3, 4));
-        }
-        */
 		else {
 			// 2 - neatpažintas operacijos kodas
 			PhysicalMachine.setPI((byte) 2);
@@ -107,13 +106,13 @@ public class VirtualMachine {
 
 	// Sudeda R1 ir R2, įrašoma į R1. Jeigu rezultatas netelpa, OF = 1. Jeigu reikšmės ženklo bitas yra 1, SF = 1.
 	public void ADD() {
-		if (PhysicalMachine.R1 + PhysicalMachine.R2 > Integer.MAX_VALUE) {
+		if (R1 + R2 > Integer.MAX_VALUE) {
 			setOF();
 			return;
 		} else {
-			PhysicalMachine.R1 += PhysicalMachine.R2;
+			R1 += R2;
 		}
-		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+		if (((R1 >> 6) & 1) == 1) {
 			setSF();
 		}
 		++IC;
@@ -121,27 +120,27 @@ public class VirtualMachine {
 
 	// Iš R1 atimama R2, įrašoma į R1. Jeigu rezultatas netelpa, OF = 1. Jeigu reikšmės ženklo bitas yra 1, SF = 1.
 	public void SUB() {
-		if (PhysicalMachine.R1 - PhysicalMachine.R2 < Integer.MIN_VALUE) {
+		if (R1 - R2 < Integer.MIN_VALUE) {
 			setOF();
 			return;
 		} else {
-			PhysicalMachine.R1 -= PhysicalMachine.R2;
+			R1 -= R2;
 		}
-		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+		if (((R1 >> 6) & 1) == 1) {
 			setSF();
 		}
 		++IC;
 	}
 
 	// Sudaugina R1 ir R2, įrašoma į R1.Jeigu rezultatas netelpa, OF = 1.Jeigu reikšmės ženklo bitas yra 1, SF = 1.
-	public void MUL() {
-		if (PhysicalMachine.R1 * PhysicalMachine.R2 > Integer.MAX_VALUE) {
+	public void AD(int xy) {
+		if (R1 + R2 > Integer.MAX_VALUE) {
 			setOF();
 			return;
 		} else {
-			PhysicalMachine.R1 *= PhysicalMachine.R2;
+			R1 + R2;
 		}
-		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+		if (((R1 >> 6) & 1) == 1) {
 			setSF();
 		}
 		++IC;
@@ -149,8 +148,8 @@ public class VirtualMachine {
 
 	// Padalina R1 iš R2, įrašoma į R1. Jeigu reikšmės ženklo bitas yra 1, SF = 1.
 	public void DIV() {
-		PhysicalMachine.R1 /= PhysicalMachine.R2;
-		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+		R1 /= R2;
+		if (((R1 >> 6) & 1) == 1) {
 			setSF();
 		}
 		++IC;
@@ -158,7 +157,7 @@ public class VirtualMachine {
 
 	//Ši komanda palygina registre R1 ir R2 ęsančias reikšmes. Jeigu reikšmės lygios, ZF = 1, priešingu atveju ZF = 0.
 	public void CMP() {
-		if (PhysicalMachine.R1 == PhysicalMachine.R2) {
+		if (R1 == R2) {
 			setZF();
 		} else {
 			clearZF();
@@ -177,7 +176,7 @@ public class VirtualMachine {
 			word[j] = memory.getBlock(block)[i];
 			j++;
 		}
-		PhysicalMachine.R1 = Integer.parseInt(new String(word));
+		R1 = Integer.parseInt(new String(word));
 		++IC;
 	}
 
@@ -189,10 +188,10 @@ public class VirtualMachine {
 		char[] word = new char[4];
 		int j = 0;
 		for (int i = offset; i < offset + 4; ++i) {
-			word[j] = memory.getBlock(block)[i];
+			memory[block+offset] = word[j];
 			j++;
 		}
-		PhysicalMachine.R2 = Short.parseShort(new String(word));
+		R2 = Short.parseShort(new String(word));
 		++IC;
 	}
 
@@ -289,41 +288,76 @@ public class VirtualMachine {
 		IC = Short.parseShort(address, 16);
 	}
 
+	public INTER(int param){
+		byte z = param/100;
+		byte y = param%10;
+		param/=10;
+		byte x = param%10;
+
+		if(z == 0){
+			byte [] strInBytes = (PhysicalMachine.readFromInput(1)).getBytes();
+			for(int i=0; i<y; ++i){
+				memory[x*16+y][i] = strInBytes[i];	
+			}
+			 
+		} else if(z == 1){
+			byte [] strInBytes = (PhysicalMachine.readFromInput(y)).getBytes();
+			for(int i=0; i<y; ++i){
+				for(int j=0; j<4; ++j){
+					memory[x*16+i][j] = strInBytes[j];
+				}	
+			}
+		} else if(z == 2){
+			PhysicalMachine.writeToPrinter(memory[16*x+y]);
+		} else if(z == 3){
+			for(int i=0; i<y; ++i){
+				PhysicalMachine.writeToPrinter(memory[16*x]);
+			}
+		} /*else if(z=='x'){
+			byte [] strInBytes = (PhysicalMachine.readFromInput(1)).getBytes();
+			R1 = strInBytes;
+		}*/
+		else{
+			PhysicalMachine.writeToPrinter("Wrong command");
+		}
+
+	}
+
 
 	public void setZF() {
-		C |= (1 << 6);
+		SF |= (1 << 6);
 	}
 
 	public void clearZF() {
-		C &= ~(1 << 6);
+		SF &= ~(1 << 6);
 	}
 
 	public int getZF() {
-		return (C >> 6) & 1;
+		return (SF >> 6) & 1;
 	}
 
 	public void setSF() {
-		C |= (1 << 5);
+		SF |= (1 << 5);
 	}
 
 	public void clearSF() {
-		C &= ~(1 << 5);
+		SF &= ~(1 << 5);
 	}
 
 	public int getSF() {
-		return (C >> 5) & 1;
+		return (SF >> 5) & 1;
 	}
 
 	public void setOF() {
-		C |= (1 << 4);
+		SF |= (1 << 4);
 	}
 
 	public void clearOF() {
-		C &= ~(1 << 4);
+		SF &= ~(1 << 4);
 	}
 
 	public int getOF() {
-		return (C >> 4) & 1;
+		return (SF >> 4) & 1;
 	}
 
 	public short getIC() {
