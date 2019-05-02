@@ -259,6 +259,8 @@ public class VirtualMachine {
 			//word[j] = memory.getBlock(block)[i];
 			j++;
 		}
+		PhysicalMachine.SetSI((byte)1);
+		PhysicalMachine.test();
 		Printer.print(new String(word));
 		++IC;
 	}
