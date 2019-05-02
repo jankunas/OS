@@ -31,10 +31,13 @@ public class PhysicalMachine {
 
 	public static Memory memory;
 	public static SupervisorMemory supervisorMemory;
+	public static Printer printer;
+	private static CLI cli;
 
 	static {
 		supervisorMemory = new SupervisorMemory();
 		memory = new Memory();
+		printer = new Printer();
 	}
 
 	private PhysicalMachine() {
@@ -49,15 +52,16 @@ public class PhysicalMachine {
 	}
 
 	public void run(final CLI cli) {
-		final VirtualMachine virtualMachine = new VirtualMachine();
-		updateMode(cli.getUserInputForMode());
+		PhysicalMachine.cli = cli;
+//		updateMode(1);
 		while (true) {
 			final String userInput = cli.getUserInput();
 			if (SHUTDOWN_COMMAND.equals(userInput)) {
 				break;
 			} else if (userInput != null) {
-				ExternalMemory.readToSupervisorMemory(userInput);
-				moveMemory("0");
+				ExternalMemory.readToSupervisorMemory(userInput, 0, 0);
+				moveMemory(0, 0);
+				final VirtualMachine virtualMachine = new VirtualMachine();
 				virtualMachine.processCommands();
 				break;
 			}
@@ -310,10 +314,12 @@ public class PhysicalMachine {
 	}
 
 	//Perkelia duomenis is supervizorines atminties i pagrindine
-	public static void moveMemory(String address) {
+	public static void moveMemory(int x1, int x2) {
 		System.out.println("Moving memory from supervisor to main memory");
 		boolean dataSeg = false;
 		boolean codeSeg = false;
+
+		int programCount = 0;
 
 		int codeOffset = 64;
 		int currCodePos = 0;
@@ -321,34 +327,50 @@ public class PhysicalMachine {
 		int commandOffset = 0;
 		int currCommandPos = 0;
 
-		for (Integer bID : supervisorMemory.usedBlocks) {
-			char[] block = supervisorMemory.getBlock(bID);
-			//Splitting every 4 'bytes'
-			String[] blockString = new String(block).split("(?<=\\G....)");
-			for (String s : blockString) {
-				if (s.equals("DATA") && !dataSeg) {
-					dataSeg = true;
-				}
-				if (s.equals("CODE")) {
-					codeSeg = true;
-				}
-				if (!codeSeg && !s.equals("DATA")) {
-					memory.writeBlockOffset(s.toCharArray(), codeOffset, currCodePos);
-					currCodePos += 4;
-					codeOffset += 4;
-					if (currCodePos == 16) {
-						currCodePos = 0;
-					}
-				}
-				if (codeSeg && !s.equals("CODE")) {
-					memory.writeBlockOffset(s.toCharArray(), commandOffset, currCommandPos);
-					currCommandPos += 4;
-					commandOffset += 4;
-					if (currCommandPos == 16) {
-						currCommandPos = 0;
-					}
+		int offX1 = x1;
+		int offX2 = x2;
+
+		for (int i = 0; i < supervisorMemory.offset; i++) {
+			String word = supervisorMemory.getWord(offX1, offX2).toString();
+
+			if (word.equals("DATA") && !dataSeg) {
+				dataSeg = true;
+			}
+			if (word.equals("CODE") && !codeSeg) {
+				codeSeg = true;
+				dataSeg = false;
+			}
+			if (!codeSeg && !word.equals("DATA") && dataSeg) {
+				memory.writeBlock(word.toCharArray(), codeOffset, currCodePos);
+				memory.usedDATABlocks++;
+				currCodePos += 1;
+				codeOffset += 1;
+				if (currCodePos == 16) {
+					currCodePos = 0;
 				}
 			}
+			if (codeSeg && !word.equals("CODE")) {
+
+				if (word.equals("HALT")) {
+					programCount++;
+					codeSeg = false;
+					dataSeg = false;
+				}
+
+				memory.writeBlock(word.toCharArray(), commandOffset, currCommandPos);
+				memory.usedCODEBlocks++;
+				currCommandPos += 1;
+				commandOffset += 1;
+				if (currCommandPos == 16) {
+					currCommandPos = 0;
+				}
+			}
+
+			offX2 += 1;
+			if (offX2 % 16 == 0) {
+				offX2 = 0;
+			}
+			offX1 += 1;
 		}
 	}
 
@@ -363,7 +385,10 @@ public class PhysicalMachine {
 	}
 
 	public static void test(){
-		//TODO
+		switch (getSI()) {
+			case 1:
+
+		}
 	}
 
 	//    @Override
