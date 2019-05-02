@@ -8,7 +8,7 @@ public class Word {
 		word = data.toCharArray();
 	}
 	public Word(char[] data){
-		System.arraycopy(data, 0, word, 0, 4);
+		System.arraycopy(data, 0, word, 0, data.length);
 	}
 
 	public String toString(){
