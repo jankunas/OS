@@ -12,6 +12,7 @@ public class PhysicalMachine {
 
 	public static int R1;
 	public static int R2;
+	public static int AX;
 	public static int PTR;
 
 	public static short IC;
