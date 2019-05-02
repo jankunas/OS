@@ -1,6 +1,5 @@
 package lt.kurti.rm;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Memory {
@@ -33,36 +32,30 @@ public class Memory {
 
      */
 
-	protected char[][] memory = new char[BLOCK_COUNT][BLOCK_SIZE];
-	protected ArrayList<Integer> usedBlocks = new ArrayList<>();
+	protected Word[][] memory = new Word[BLOCK_COUNT][BLOCK_SIZE];
+	public int usedCODEBlocks = 0;
+	public int usedDATABlocks = 0;
+	protected int offset = 0;
 
 	public Memory() {
 	}
 
-	public char[] getBlock(int block) {
-		if (block < 0 || block > (BLOCK_SIZE)) {
-			throw new IllegalArgumentException("Incorrect block specified!");
-		} else {
-			return memory[block];
-		}
+	public Word getWord(int x1, int x2) {
+		return memory[x1 / 16][x2];
 	}
 
-	public void writeBlock(char[] data, int block) {
-		if (block < 0 || block > (BLOCK_SIZE)) {
-			throw new IllegalArgumentException("Incorrect block specified!");
-		} else {
-			memory[block] = data;
-			usedBlocks.add(block);
-		}
+	public void writeBlock(char[] data, int x1, int x2) {
+		memory[x1 / 16][x2] = new Word(data);
+		offset++;
 	}
 
-	public void writeBlockOffset(char[] data, int offset1, int offset2) {
-		int blockID = offset1 / 16;
-		for (int i = 0; i < data.length; ++i) {
-			memory[blockID][offset2] = data[i];
-			offset2++;
-		}
-	}
+//	public void writeBlockOffset(char[] data, int offset1, int offset2) {
+//		int blockID = offset1 / 16;
+//		for (int i = 0; i < data.length; ++i) {
+//			memory[blockID][offset2] = data[i];
+//			offset2++;
+//		}
+//	}
 
 	public void display() {
 		for (int x = 0; x < BLOCK_COUNT; ++x) {
@@ -78,9 +71,6 @@ public class Memory {
 		return "Memory{" +
 				"BLOCK_COUNT=" + BLOCK_COUNT +
 				", BLOCK_SIZE=" + BLOCK_SIZE +
-				", memory=" + Arrays.toString(memory) +
-				", usedBlocks=" + usedBlocks +
-				'}';
+				", memory=" + Arrays.toString(memory);
 	}
-
 }

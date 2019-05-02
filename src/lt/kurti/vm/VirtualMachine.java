@@ -1,5 +1,8 @@
 package lt.kurti.vm;
 
+import static lt.kurti.rm.PhysicalMachine.R1;
+import static lt.kurti.rm.PhysicalMachine.R2;
+
 import lt.kurti.rm.Memory;
 import lt.kurti.rm.PhysicalMachine;
 import lt.kurti.rm.Printer;
@@ -8,7 +11,6 @@ public class VirtualMachine {
 
 	private byte SF, IOI;
 	private short IC;
-	private int R1, R2;
 
 	private Memory memory;
 
@@ -18,28 +20,30 @@ public class VirtualMachine {
 	}
 
 	public void processCommands() {
-		for (int cmdBlock = 0; cmdBlock < 4; ++cmdBlock) {
-			char[] block = memory.getBlock(cmdBlock);
-			//Splitting every 4 'bytes'
-			String[] blockString = new String(block).split("(?<=\\G....)");
-			for (String s : blockString) {
-				try {
-					if (s.equals("HALT")) {
-						return;
-					}
-					//nebutina turbut
-					if (s.contains("_")) {
-						s = s.replace("_", "");
-					}
-					if (PhysicalMachine.getMODE() == 0) {
-						System.out.println(PhysicalMachine.getInfo());
-						System.out.println("VM " + this.toString());
-						System.in.read();
-					}
-					resolveCommand(s);
-				} catch (Exception e) {
-					e.printStackTrace();
+		int offX1 = 0, offX2 = 0;
+		for (int cmdBlock = 0; cmdBlock < memory.usedCODEBlocks; ++cmdBlock) {
+			String word = new String(memory.getWord(offX1, offX2).word);
+			if (word.contains("_")) {
+				word = word.replace("_", "");
+			}
+			if(word.equals("HALT")){
+				System.out.println("HALT found. HALTING...");
+			}
+			try {
+				if (PhysicalMachine.getMODE() == 0) {
+					System.out.println(PhysicalMachine.getInfo());
+					System.in.read();
 				}
+				resolveCommand(word);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			offX1++;
+			offX2++;
+			if(offX2 == 16){
+				offX2 = 0;
 			}
 		}
 	}
@@ -62,11 +66,17 @@ public class VirtualMachine {
 		} else if (line.substring(0, 2).equals("LX")) {
 //			LX(Integer.parseInt(line.substring(2,4)));
 		} else if (line.substring(0, 2).equals("LW")) {
-			LW(Integer.parseInt(line.substring(2, 3)));
+			String memLoc = line.substring(2, 4);
+			int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
+			int x2 = Character.getNumericValue(memLoc.charAt(1));
+			LW(x1, x2/4);
 		} else if (line.substring(0, 2).equals("LR")) {
 			LR(line.substring(2, 3));
 		} else if (line.substring(0, 2).equals("PM")) {
-			SX(Integer.parseInt(line.substring(2, 4)));
+			String memLoc = line.substring(2, 4);
+			int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
+			int x2 = Character.getNumericValue(memLoc.charAt(1));
+			SX(x1, x2);
 		} else if (line.substring(0, 2).equals("LR")) {
 			LR(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JP")) {
@@ -164,23 +174,16 @@ public class VirtualMachine {
 	}
 
 	//LWx1x2 - į registrą R1 užkrauna žodį nurodytu adresu 16 * x1 + x2.
-	public void LW(int address) {
-		R1 = address;
+	public void LW(int x1, int x2) {
+		char[] word = memory.getWord(x1, x2).word;
+		R1 = Integer.parseInt(new String(word));
 		++IC;
 	}
 
 	//LEx1x2 - į registrą R2 užkrauna skaičių, adresu 16 * x1 + x2.
-	public void LE(int address) {
-		int block = address / 16;
-		int offset = (address - 64) % 16;
-
-		char[] word = new char[4];
-		int j = 0;
-		for (int i = offset; i < offset + 4; ++i) {
-			word[j] = memory.getBlock(block)[i];
-			j++;
-		}
-		R2 = Short.parseShort(new String(word));
+	public void LE(int x1, int x2) {
+		char[] word = memory.getWord(x1, x2).word;
+		R2 = Integer.parseInt(new String(word));
 		++IC;
 	}
 
@@ -216,17 +219,8 @@ public class VirtualMachine {
 	}
 
 	//Isveda i ekrana atminties 4 baitus
-	public void SX(int address) {
-
-		int block = address / 16;
-		int offset = (address - 64) % 16;
-
-		char[] word = new char[4];
-		int j = 0;
-		for (int i = offset; i < offset + 4; ++i) {
-			word[j] = memory.getBlock(block)[i];
-			j++;
-		}
+	public void SX(final int x1, final int x2) {
+		char[] word = memory.getWord(x1, x2).word;
 		Printer.print(new String(word));
 		++IC;
 	}
@@ -281,17 +275,17 @@ public class VirtualMachine {
 
 		if (z == 0) {
 			char[] strInBytes = (PhysicalMachine.readFromInput(1)).toCharArray();
-			memory.writeBlock(strInBytes, memory.getBlock(x * 16)[y]);
+//			memory.writeBlock(strInBytes, memory.getBlock(x * 16)[y]);
 		} else if (z == 1) {
 			char[] strInBytes = (PhysicalMachine.readFromInput(y)).toCharArray();
 			for (int i = 0; i < y; ++i) {
-				memory.writeBlock(strInBytes, memory.getBlock(x * 16)[i]);
+//				memory.writeBlock(strInBytes, memory.getBlock(x * 16)[i]);
 			}
 		} else if (z == 2) {
-			PhysicalMachine.writeToPrinter(memory.getBlock(16 * x)[y]);
+//			PhysicalMachine.writeToPrinter(memory.getBlock(16 * x)[y]);
 		} else if (z == 3) {
 			for (int i = 0; i < y; ++i) {
-				PhysicalMachine.writeToPrinter(memory.getBlock(16 * x)[i]);
+//				PhysicalMachine.writeToPrinter(memory.getBlock(16 * x)[i]);
 			}
 		} /*else if(z=='x'){
 			byte [] strInBytes = (PhysicalMachine.readFromInput(1)).getBytes();

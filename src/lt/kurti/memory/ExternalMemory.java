@@ -13,14 +13,14 @@ public class ExternalMemory {
 
 	private static boolean isReadSuccessful = false;
 
-	public static void readToSupervisorMemory(final String programName) {
+	public static void readToSupervisorMemory(final String programName, final int offX1, final int offX2) {
 		try (FileReader fr = new FileReader(EXTERNAL_MEMORY_FILE_NAME);
 			 BufferedReader br = new BufferedReader(fr)) {
 			String line;
 
 			while ((line = br.readLine()) != null) {
 				if (isProgramNamePresent(line, programName)) {
-					if (readProgramToSupervisorMemory(br)) {
+					if (readProgramToSupervisorMemory(br, offX1, offX2)) {
 						isReadSuccessful = true;
 						break;
 					}
@@ -36,8 +36,7 @@ public class ExternalMemory {
 		System.out.println("Reading from External Memory to Supervisor Memory finished.");
 	}
 
-	private static boolean readProgramToSupervisorMemory(final BufferedReader br) {
-		int block = 0;
+	private static boolean readProgramToSupervisorMemory(final BufferedReader br, int offX1, int offX2) {
 		while (true) {
 			try {
 				String line = br.readLine();
@@ -46,13 +45,17 @@ public class ExternalMemory {
 				} else if (END_OF_FILE_KW.equals(line)) {
 					break;
 				}
-				supervisorMemory.writeBlock(line.toCharArray(), block);
-				block++;
+				supervisorMemory.writeBlock(line.toCharArray(), offX1, offX2);
+				offX2++;
+				if (offX2 % 16 == 0) {
+					offX2++;
+				}
+				offX1++;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		return block != 0;
+		return offX2 != 0;
 	}
 
 	private static boolean isProgramNamePresent(final String line, final String programName) {
