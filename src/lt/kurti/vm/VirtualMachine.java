@@ -72,6 +72,10 @@ public class VirtualMachine {
 			int x2 = Character.getNumericValue(memLoc.charAt(1));
 			LW(x1, x2/4);
 		}
+		else if (line.substring(0, 2).equals("LD")){
+			LD(Integer.parseInt(line.substring(3, 4)));
+		}
+
 		else if (line.substring(0, 2).equals("LE"))
 		{
 			String memLoc = line.substring(2, 4);
@@ -83,7 +87,7 @@ public class VirtualMachine {
 			PM(Integer.parseInt(line.substring(2, 4), 16) + 64);
 		}
         else if (line.substring(0, 2).equals("LS")) {
-            LS(line.substring(3, 4));
+            LS(Integer.parseInt(line.substring(3, 4)));
         }
         else if (line.substring(0, 2).equals("LX")) {
             String memLoc = line.substring(2, 4);
@@ -98,7 +102,7 @@ public class VirtualMachine {
 			LY(x1, x2/4);
         }
         else if (line.substring(0, 2).equals("LL")) {
-            LL(line.substring(3, 4));
+            LL(Integer.parseInt(line.substring(3, 4)));
         }
 		else if (line.substring(0, 2).equals("LR")) {
 			LR(line.substring(2, 4));
@@ -110,6 +114,8 @@ public class VirtualMachine {
 			JG(line.substring(3, 4));
 		} else if (line.substring(0, 2).equals("JL")) {
 			JL(line.substring(3, 4));
+		} else if (line.substring(0, 2).equals("JN")) {
+			JN(line.substring(3, 4));
 		} else if (line.substring(0, 2).equals("IC")) {
 			IC(line.substring(3, 4));
 		}
@@ -247,6 +253,11 @@ public class VirtualMachine {
 		PhysicalMachine.R2 = Integer.parseInt(new String(word));
 		++IC;
 	}
+	//LDx - į R1 įrašo reikšmę x
+	public void LD(int value){
+		PhysicalMahine.R1 = value;
+		++IC;
+	}
 
 	//LSx1x2 - į atmintį adresu 16 * x1 + x2 rašo žodį ar skaičių.
 	//Duomenu ivedimui is failo naudosim
@@ -360,9 +371,16 @@ public class VirtualMachine {
 			Integer.parseInt(address, 16);
 			IC(address);
 		}
-		++IC;
+			++IC;
 	}
 
+	public void JN(String address) {
+		if (getZF() == 0) {
+			IC(address);
+		}
+		else
+			++IC;
+	}
 	/// /IC - komandos skaitliukas. IC = 16 * x1 + x2;
 	//Kam jis ir kuo skiriasi nuo JM? Kam ja pridejau isvis? :D
 	public void IC(String address) {
