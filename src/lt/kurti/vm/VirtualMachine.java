@@ -3,6 +3,8 @@ package lt.kurti.vm;
 import static lt.kurti.rm.PhysicalMachine.R1;
 import static lt.kurti.rm.PhysicalMachine.R2;
 import static lt.kurti.rm.PhysicalMachine.AX;
+import static lt.kurti.rm.PhysicalMachine.setSI;
+import static lt.kurti.rm.PhysicalMachine.test;
 
 import lt.kurti.rm.Memory;
 import lt.kurti.rm.PhysicalMachine;
@@ -29,9 +31,6 @@ public class VirtualMachine {
 			if (word.contains("_")) {
 				word = word.replace("_", "");
 			}
-			if(word.equals("HALT")){
-				System.out.println("HALT found. HALTING...");
-			}
 			try {
 				if (PhysicalMachine.getMODE() == 0) {
 					System.out.println(PhysicalMachine.getInfo());
@@ -55,7 +54,8 @@ public class VirtualMachine {
 	public void resolveCommand(String line) throws Exception {
 		System.out.println("Resolve command: " + line);
 		if (line.equals("HALT")) {
-			PhysicalMachine.HALT();
+			setSI((byte) 3);
+			test();
 		} else if (line.substring(0, 3).equals("ADD")) {
 			ADD();
 		} else if (line.substring(0, 3).equals("SUB")) {
@@ -238,12 +238,14 @@ public class VirtualMachine {
 
 	//LRXX- išveda į printerį XX registrą (R1 arba R2)
 	public void LR(String register) {
+		PhysicalMachine.setSI((byte) 2);
 		if (register.equals("R1")) {
-			Printer.print(PhysicalMachine.getR1());
+			PhysicalMachine.sharedMemory.writeBlock(String.valueOf(PhysicalMachine.getR1()).toCharArray(), 0, 0);
 		}
 		if (register.equals("R2")) {
-			Printer.print(PhysicalMachine.getR1());
+			PhysicalMachine.sharedMemory.writeBlock(String.valueOf(PhysicalMachine.getR2()).toCharArray(), 0, 0);
 		}
+		test();
 		++IC;
 	}
 

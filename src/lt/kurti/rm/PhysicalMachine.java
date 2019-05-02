@@ -33,11 +33,13 @@ public class PhysicalMachine {
 	public static Memory memory;
 	public static SupervisorMemory supervisorMemory;
 	public static Printer printer;
+	public static SharedMemory sharedMemory;
 	private static CLI cli;
 
 	static {
 		supervisorMemory = new SupervisorMemory();
 		memory = new Memory();
+		sharedMemory = new SharedMemory();
 		printer = new Printer();
 	}
 
@@ -388,9 +390,29 @@ public class PhysicalMachine {
 	public static void test(){
 		switch (getSI()) {
 			case 1:
-
+				String userInput = cli.getUserInput();
+				sharedMemory.writeBlock(userInput.toCharArray(), 0, 0);
+				setSI((byte) 0);
+			case 2:
+				Printer.print(sharedMemory.getWord(0, 0).word);
+				setSI((byte) 0);
+			case 3:
+				System.out.println("HALT found. HALTING...");
+				setSI((byte) 0);
+			case 4:
+				setSI((byte) 0);
+			case 5:
+				setSI((byte) 0);
+			default:
+				setSI((byte) 0);
 		}
+		clearSharedMemory();
 	}
+
+	private static void clearSharedMemory() {
+		sharedMemory = new SharedMemory();
+	}
+
 
 	//    @Override
 	public static String getInfo() {
