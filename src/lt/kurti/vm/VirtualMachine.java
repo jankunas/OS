@@ -69,9 +69,8 @@ public class VirtualMachine {
 				int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
 				int x2 = Character.getNumericValue(memLoc.charAt(1));
 				LX(x1, x2/4);
-				);
 		} else if (line.substring(0, 2).equals("LW")) {
-				LW(Integer.parseInt(line.substring(2,3)));
+				LW(line.substring(2,3));
 		} else if (line.substring(0, 2).equals("LR")) {
 			LR(Integer.parseInt(line.substring(2, 3)));
 		} else if (line.substring(0, 2).equals("SX")) {
@@ -94,13 +93,13 @@ public class VirtualMachine {
 		} else if (line.substring(0, 2).equals("JO")) {
 			JO(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("LP")) {
-			LP(Integer.parseInt(line.substring(2, 4)));
+			LP(line.substring(2, 4));
 		} else if (line.substring(0, 3).equals("AND")) {
 			AND();
 		} else if (line.substring(0, 2).equals("OR")) {
 			OR();
 		} else if (line.substring(0, 2).equals("NR")) {
-			NOT(Integer.parseInt(line.substring(2,3)));
+			NR(Integer.parseInt(line.substring(2,3)));
 		} else if (line.substring(0, 3).equals("XOR")) {
 			XOR();
 		} else if (line.substring(0, 1).equals("I")) {
@@ -147,7 +146,7 @@ public class VirtualMachine {
 			setOF();
 			return;
 		} else {
-			memory.writeBlock(R1+R2,xy/16,xy%16);
+			memory.writeBlock(String.valueOf(R1+R2).toCharArray(),xy/16,xy%16);
 		}
 		if (((R1 >> 6) & 1) == 1) {
 			setSF();
@@ -162,7 +161,7 @@ public class VirtualMachine {
 			setOF();
 			return;
 		} else {
-			memory.writeBlock(R1-R2,xy/16,xy%16);
+			memory.writeBlock(String.valueOf(R1-R2).toCharArray(),xy/16,xy%16);
 		}
 		if (((R1 >> 6) & 1) == 1) {
 			setSF();
@@ -196,19 +195,18 @@ public class VirtualMachine {
 	}
 
 	public void LW(String val) {
-		int x = Integer.parseInt(val, 16);
-		R1 = x;
+		R1 = Integer.parseInt(val, 16);
 		++IC;
 	}
 
 	//LRx - į registrą RX užkrauna R~X reikšmę
 	public void LR(int x) {
 		if(x==1){
-			R1 = Integer.parseInt(R2, 16);
+			R1 = R2;
 			++IC;
 		}
 		if(x==2){
-			R2 = Integer.parseInt(R1, 16);
+			R2 = R1;
 			++IC;
 		}
 		else
@@ -218,7 +216,7 @@ public class VirtualMachine {
 	//LSx1x2 - į atmintį adresu 16 * x1 + x2 rašo žodį ar skaičių.
 	//Duomenu ivedimui is failo naudosim
 	public void SX(int x, int y) {
-		memory.writeBlock(R1,x,y);
+		memory.writeBlock(String.valueOf(R1).toCharArray(),x,y);
 		++IC;
 	}
 
@@ -290,7 +288,7 @@ public class VirtualMachine {
 			++IC;
 	}
 
-	public void LN(String address) {
+	public void JN(String address) {
 		if (getZF()==0){
 			IC(address);
 		}
@@ -299,10 +297,10 @@ public class VirtualMachine {
 	}
 
 	public void JC(String address) {
-		if (getCF()==1){
-			IC(address);
-		}
-		else
+//		if (getCF()==1){
+//			IC(address);
+//		}
+//		else
 			++IC;
 	}
 
@@ -315,7 +313,7 @@ public class VirtualMachine {
 	}
 
 	public void LP(String address) {
-		if(Integer.parseInt(R2)>0){
+		if(R2>0){
 			R2 = R2 - 1;
 			IC(address);
 		}
@@ -356,14 +354,14 @@ public class VirtualMachine {
 		String y = param.substring(2, 3);
 
 		if (z.equals("0")) {
-			AX = Integer.parseShort(x)*16+Integer.parseShort(y);
-			PhysicalMachine.setSI((short)1);
+			AX = Integer.parseInt(x)*16+Integer.parseInt(y);
+			PhysicalMachine.setSI((byte)1);
 			PhysicalMachine.test();
 			R1 = AX;
 		}
 		else if(z.equals("2")) {
 			AX = R1;
-			PhysicalMachine.setSI((short)2);
+			PhysicalMachine.setSI((byte)2);
 			PhysicalMachine.test();
 		}
 		/*	//char[] strInBytes = (PhysicalMachine.readFromInput(1)).toCharArray();
