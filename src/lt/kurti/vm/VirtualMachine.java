@@ -346,7 +346,6 @@ public class VirtualMachine {
 		++IC;
 	}
 	/// /IC - komandos skaitliukas. IC = 16 * x1 + x2;
-	//Kam jis ir kuo skiriasi nuo JM? Kam ja pridejau isvis? :D
 	public void IC(String address) {
 		IC = Short.parseShort(address, 16);
 	}
