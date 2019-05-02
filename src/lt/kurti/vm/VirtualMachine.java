@@ -214,7 +214,13 @@ public class VirtualMachine {
 	public void CMP() {
 		if (PhysicalMachine.R1 == PhysicalMachine.R2) {
 			setZF();
-		} else {
+		} else if(PhysicalMachine.R1 > PhysicalMachine.R2){
+			clearZF();
+			clearSF();
+		}else if(PhysicalMachine.R1 < PhysicalMachine.R2){
+			clearZF();
+			setSF();
+		}else{
 			clearZF();
 		}
 		++IC;
