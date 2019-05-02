@@ -178,6 +178,38 @@ public class VirtualMachine {
 		++IC;
 	}
 
+	public void AND() {
+		PhysicalMachine.R1 = PhysicalMachine.R1 & PhysicalMachine.R2;
+		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+			setSF();
+		}
+		++IC;
+	}
+
+	public void OR() {
+		PhysicalMachine.R1 = PhysicalMachine.R1 | PhysicalMachine.R2;
+		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+			setSF();
+		}
+		++IC;
+	}
+
+	public void XOR() {
+		PhysicalMachine.R1 = PhysicalMachine.R1 ^ PhysicalMachine.R2;
+		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+			setSF();
+		}
+		++IC;
+	}
+
+	public void NOT() {
+		PhysicalMachine.R1 = ~PhysicalMachine.R1;
+		if (((PhysicalMachine.R1 >> 6) & 1) == 1) {
+			setSF();
+		}
+		++IC;
+	}
+
 	//Ši komanda palygina registre R1 ir R2 ęsančias reikšmes. Jeigu reikšmės lygios, ZF = 1, priešingu atveju ZF = 0.
 	public void CMP() {
 		if (PhysicalMachine.R1 == PhysicalMachine.R2) {
