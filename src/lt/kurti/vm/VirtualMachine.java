@@ -147,7 +147,7 @@ public class VirtualMachine {
 	}
 
 	// Padalina R1 iš R2, įrašoma į R1. Jeigu reikšmės ženklo bitas yra 1, SF = 1.
-	public void DIV() {
+	public void SB() {
 		R1 /= R2;
 		if (((R1 >> 6) & 1) == 1) {
 			setSF();
@@ -160,7 +160,7 @@ public class VirtualMachine {
 		if (R1 == R2) {
 			setZF();
 		} else {
-			clearZF();
+			x1earZF();
 		}
 		++IC;
 	}
