@@ -57,10 +57,14 @@ public class Memory {
 //		}
 //	}
 
-	public void display() {
-		for (int x = 0; x < BLOCK_COUNT; ++x) {
+	public void display(int blockCount) {
+		for (int x = 0; x < blockCount; ++x) {
 			for (int y = 0; y < BLOCK_SIZE; ++y) {
-				System.out.print(memory[x][y] + "|");
+				if (memory[x][y] == null) {
+					System.out.print("(EMPTY)|");
+				} else {
+					System.out.print(memory[x][y] + "|");
+				}
 			}
 			System.out.println();
 		}

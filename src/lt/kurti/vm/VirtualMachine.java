@@ -1,18 +1,14 @@
 package lt.kurti.vm;
 
-import static lt.kurti.rm.PhysicalMachine.R1;
-import static lt.kurti.rm.PhysicalMachine.R2;
-import static lt.kurti.rm.PhysicalMachine.AX;
 import static lt.kurti.rm.PhysicalMachine.setSI;
+import static lt.kurti.rm.PhysicalMachine.sharedMemory;
 import static lt.kurti.rm.PhysicalMachine.test;
 
 import lt.kurti.rm.Memory;
 import lt.kurti.rm.PhysicalMachine;
-import lt.kurti.rm.Printer;
 
 public class VirtualMachine {
 
-	private byte SF, IOI;
 	private short IC;
 	private byte C;
 
@@ -34,17 +30,17 @@ public class VirtualMachine {
 			try {
 				if (PhysicalMachine.getMODE() == 0) {
 					System.out.println(PhysicalMachine.getInfo());
+					sharedMemory.display(sharedMemory.BLOCK_COUNT);
 					System.in.read();
 				}
 				resolveCommand(word);
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
 			offX1++;
 			offX2++;
-			if(offX2 == 16){
+			if (offX2 == 16) {
 				offX2 = 0;
 			}
 		}
@@ -70,41 +66,31 @@ public class VirtualMachine {
 			String memLoc = line.substring(2, 4);
 			int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
 			int x2 = Character.getNumericValue(memLoc.charAt(1));
-			LW(x1, x2/4);
-		}
-		else if (line.substring(0, 2).equals("LD")){
+			LW(x1, x2 / 4);
+		} else if (line.substring(0, 2).equals("LD")) {
 			LD(Integer.parseInt(line.substring(3, 4)));
-		}
-
-		else if (line.substring(0, 2).equals("LE"))
-		{
+		} else if (line.substring(0, 2).equals("LE")) {
 			String memLoc = line.substring(2, 4);
 			int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
 			int x2 = Character.getNumericValue(memLoc.charAt(1));
-			LE(x1,x2/4);
-		}
-		else if (line.substring(0, 2).equals("PM")) {
+			LE(x1, x2 / 4);
+		} else if (line.substring(0, 2).equals("PM")) {
 			PM(Integer.parseInt(line.substring(2, 4), 16) + 64);
-		}
-        else if (line.substring(0, 2).equals("LS")) {
-            LS(Integer.parseInt(line.substring(3, 4)));
-        }
-        else if (line.substring(0, 2).equals("LX")) {
-            String memLoc = line.substring(2, 4);
+		} else if (line.substring(0, 2).equals("LS")) {
+			LS(Integer.parseInt(line.substring(3, 4)));
+		} else if (line.substring(0, 2).equals("LX")) {
+			String memLoc = line.substring(2, 4);
 			int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
 			int x2 = Character.getNumericValue(memLoc.charAt(1));
-			LX(x1, x2/4);
-        }
-         else if (line.substring(0, 2).equals("LY")) {
-            String memLoc = line.substring(2, 4);
+			LX(x1, x2 / 4);
+		} else if (line.substring(0, 2).equals("LY")) {
+			String memLoc = line.substring(2, 4);
 			int x1 = Character.getNumericValue(memLoc.charAt(0)) + 64;
 			int x2 = Character.getNumericValue(memLoc.charAt(1));
-			LY(x1, x2/4);
-        }
-        else if (line.substring(0, 2).equals("LL")) {
-            LL(Integer.parseInt(line.substring(3, 4)));
-        }
-		else if (line.substring(0, 2).equals("LR")) {
+			LY(x1, x2 / 4);
+		} else if (line.substring(0, 2).equals("LL")) {
+			LL(Integer.parseInt(line.substring(3, 4)));
+		} else if (line.substring(0, 2).equals("LR")) {
 			LR(line.substring(2, 4));
 		} else if (line.substring(0, 2).equals("JM")) {
 			JM(line.substring(3, 4));
@@ -119,13 +105,13 @@ public class VirtualMachine {
 		} else if (line.substring(0, 2).equals("IC")) {
 			IC(line.substring(3, 4));
 		}
-        /*else if (line.substring(0, 2).equals("PD")) {
-            PD(line.subsring(3, 4));
+        else if (line.substring(0, 2).equals("PD")) {
+            PD(Integer.parseInt(line.substring(3, 4)));
         }
-         else if (line.substring(0, 2).equals("GD")) {
-            GD(line.substring(3, 4));
-        }
-        */
+//         else if (line.substring(0, 2).equals("GD")) {
+//            GD(line.substring(3, 4));
+//        }
+
 		else {
 			// 2 - neatpažintas operacijos kodas
 			PhysicalMachine.setPI((byte) 2);
@@ -220,13 +206,13 @@ public class VirtualMachine {
 	public void CMP() {
 		if (PhysicalMachine.R1 == PhysicalMachine.R2) {
 			setZF();
-		} else if(PhysicalMachine.R1 > PhysicalMachine.R2){
+		} else if (PhysicalMachine.R1 > PhysicalMachine.R2) {
 			clearZF();
 			clearSF();
-		}else if(PhysicalMachine.R1 < PhysicalMachine.R2){
+		} else if (PhysicalMachine.R1 < PhysicalMachine.R2) {
 			clearZF();
 			setSF();
-		}else{
+		} else {
 			clearZF();
 		}
 		++IC;
@@ -234,28 +220,21 @@ public class VirtualMachine {
 
 	//LWx1x2 - į registrą R1 užkrauna žodį nurodytu adresu 16 * x1 + x2.
 	public void LW(int x1, int x2) {
-        /*int block = address / 16;
-        int offset = (address - 64) % 16; */
-		char[] word = new char[4];
-		// int j = 0;
-		word = memory.getWord(x1, x2).word;
+		char[] word = memory.getWord(x1, x2).word;
 		PhysicalMachine.R1 = Integer.parseInt(new String(word));
 		++IC;
 	}
 
 	//LEx1x2 - į registrą R2 užkrauna skaičių, adresu 16 * x1 + x2.
 	public void LE(int x1, int x2) {
-        /*int block = address / 16;
-        int offset = (address - 64) % 16; */
-		char[] word = new char[4];
-		// int j = 0;
-		word = memory.getWord(x1, x2).word;
+		char[] word = memory.getWord(x1, x2).word;
 		PhysicalMachine.R2 = Integer.parseInt(new String(word));
 		++IC;
 	}
+
 	//LDx - į R1 įrašo reikšmę x
-	public void LD(int value){
-		PhysicalMahine.R1 = value;
+	public void LD(int value) {
+		PhysicalMachine.R1 = value;
 		++IC;
 	}
 
@@ -266,40 +245,34 @@ public class VirtualMachine {
 		int offset = (address - 64) % 16;
 		PhysicalMachine.setSI((byte) 1);
 		test();
-		
-		char [] data = new char [4];
+
+		char[] data = new char[4];
 		data = PhysicalMachine.sharedMemory.getWord(block, offset).word;
-		memory.writeBlock(data,block,offset);
+		memory.writeBlock(data, block, offset);
 		++IC;
 	}
 
 
 	//LXx1x2 - į R1 užkrauna bendrosios atminties srities adreso 16*x1 + x2 reikšmę.
 	public void LX(int x1, int x2) {
-		char[] word = new char[4];
-		word = PhysicalMachine.sharedMemory.getWord(x1, x2).word;
+		char[] word = PhysicalMachine.sharedMemory.getWord(x1, x2).word;
 		PhysicalMachine.R1 = Integer.parseInt(new String(word));
 		++IC;
 	}
 
 	//LYx1x2 - į R2 užkrauna bendrosios atminties srities adreso 16*x1 + x2 reikšmę.
 	public void LY(int x1, int x2) {
-		char[] word = new char[4];
-		word = PhysicalMachine.sharedMemory.getWord(x1, x2).word;
+		char[] word = PhysicalMachine.sharedMemory.getWord(x1, x2).word;
 		PhysicalMachine.R2 = Integer.parseInt(new String(word));
 		++IC;
 	}
 
 	//LLx1x2 - į bendrosios atminties sritį adresu 16 * x1 + x2 rašo žodį ar skaičių.
 	public void LL(int address) {
-		int block = address / 16;
-		int offset = (address - 64) % 16;
-		PhysicalMachine.setSI((byte) 1);
+		PhysicalMachine.R2 = PhysicalMachine.R1;
+		PhysicalMachine.R1 = address;
+		PhysicalMachine.setSI((byte) 4);
 		test();
-		
-		char [] data = new char [4];
-		data = PhysicalMachine.sharedMemory.getWord(block, offset).word;
-		PhysicalMachine.sharedMemory.writeBlock(data,block,offset);
 		++IC;
 	}
 
@@ -319,31 +292,18 @@ public class VirtualMachine {
 
 	//Isveda i ekrana atminties 4 baitus
 	public void PM(int address) {
-
 		int block = address / 16;
 		int offset = (address - 64) % 16;
 		PhysicalMachine.setSI((byte) 2);
 		PhysicalMachine.sharedMemory.writeBlock(String.valueOf(memory.getWord(block, offset)).toCharArray(), 0, 0);
 		test();
 		++IC;
-		// char[] word = new char[4];
-		// int j = 0;
-		// for (int i = offset; i < offset + 4; ++i) {
-		// 	//word[j] = memory.getBlock(block)[i];
-		// 	j++;
-		// }
-		
 	}
 
-	//JMx1x2 - besąlyginio valdymo perdavimo komanda. Ji reiškia, kad valdymas turi būti perduotas kodo segmento žodžiui, nurodytam adresu 16 * x1 + x2
+	//JMx1x2 - besąlyginio valdymo perdavimo komanda. Ji reiškia, kad valdymas turi būti perduotas kodo segmento žodžiui, nurodytam adresu 16 * x1
+	// + x2
 	public void JM(String address) {
-		/*int block = address / 16;
-		int offset = (address - 64) % 16;
-		offX1 = block;
-		offX2 = offset;*/
 		IC(address);
-		//Word goTo = new Word(address);
-		//IC = Integer.parseInt(new String(goTo));
 	}
 
 	//JEx1x2 - valdymas turi būti perduotas kodo segmento žodžiui, nurodytam adresu 16* x1 + x2 jeigu ZF = 1
@@ -351,8 +311,7 @@ public class VirtualMachine {
 		if (getZF() == 1) {
 			//processCommands() tik paduot parametra, nuo kurios vietos vykdyt koda
 			IC(address);
-		}
-		else
+		} else
 			++IC;
 	}
 
@@ -360,8 +319,7 @@ public class VirtualMachine {
 	public void JG(String address) {
 		if (getZF() == 0 && getSF() == getOF()) {
 			IC(address);
-		}
-		else
+		} else
 			++IC;
 	}
 
@@ -371,27 +329,29 @@ public class VirtualMachine {
 			Integer.parseInt(address, 16);
 			IC(address);
 		}
-			++IC;
+		++IC;
 	}
 
 	public void JN(String address) {
 		if (getZF() == 0) {
 			IC(address);
-		}
-		else
+		} else
 			++IC;
 	}
+
 	/// /IC - komandos skaitliukas. IC = 16 * x1 + x2;
-	//Kam jis ir kuo skiriasi nuo JM? Kam ja pridejau isvis? :D
 	public void IC(String address) {
 		IC = Short.parseShort(address, 16);
 	}
-/*
-	public void PD(String address) {
-		PhysicalMachine.setSI((byte)1);
-		PhysicalMachine.supervisorMemory.writeBlock
+
+
+	public void PD(int address) {
+		PhysicalMachine.R1 = address;
+		PhysicalMachine.setSI((byte) 5);
+		test();
+		++IC;
 	}
-*/
+
 	public void setZF() {
 		C |= (1 << 6);
 	}
@@ -438,7 +398,7 @@ public class VirtualMachine {
 
 	@Override
 	public String toString() {
-		return  "+------------------+" + '\n' +
+		return "+------------------+" + '\n' +
 				"|       VM         |" + '\n' +
 				"+------------------+" + '\n' +
 				"| IC: " + getIC() + '\n' +

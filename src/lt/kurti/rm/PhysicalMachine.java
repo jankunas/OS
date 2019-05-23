@@ -2,6 +2,8 @@ package lt.kurti.rm;
 
 import static lt.kurti.constants.Constants.SHUTDOWN_COMMAND;
 
+import java.util.Arrays;
+
 import lt.kurti.cli.CLI;
 import lt.kurti.memory.ExternalMemory;
 import lt.kurti.vm.VirtualMachine;
@@ -12,7 +14,6 @@ public class PhysicalMachine {
 
 	public static int R1;
 	public static int R2;
-	public static int AX;
 	public static int PTR;
 
 	public static short IC;
@@ -66,7 +67,10 @@ public class PhysicalMachine {
 				moveMemory(0, 0);
 				final VirtualMachine virtualMachine = new VirtualMachine();
 				virtualMachine.processCommands();
-				break;
+				supervisorMemory.offset = 0;
+				memory.offset = 0;
+				memory.usedCODEBlocks = 0;
+				memory.usedDATABlocks = 0;
 			}
 		}
 	}
@@ -236,10 +240,16 @@ public class PhysicalMachine {
 			case 3:
 				System.out.println("SI:3. HALT Command Interupt");
 				break;
+			case 4:
+				System.out.println("SI:4. WRITE to shared memory");
+				break;
+			case 5:
+				System.out.println("SI:5. READ from shared memory");
+				break;
 			default:
 				break;
 		}
-		if (state == 1 || state == 2 || state == 3)
+		if (state == 1 || state == 2 || state == 3 || state == 4 || state == 5)
 			SI = state;
 	}
 
@@ -377,44 +387,64 @@ public class PhysicalMachine {
 		}
 	}
 
-	//GDx - SI tampa 2 ir valdymas perduodamas OS, duomenų kopijavimui į kietąjį diską iš supervizorinės atminties vietos x.
-	public static void GD(String address) {
-		setSI((byte) 2);
-		setCH1((byte) 1);
-		//paimt is atminties address
-		//ir irasyt i hdd
-		setCH1((byte) 0);
-		setSI((byte) 0);
-	}
-
 	public static void test(){
+		int address, block, offset;
+		char[] data;
 		switch (getSI()) {
 			case 1:
-				String userInput = cli.getUserInput();
+				final String userInput = cli.getUserInput();
 				sharedMemory.writeBlock(userInput.toCharArray(), 0, 0);
 				setSI((byte) 0);
+				break;
 			case 2:
 				Printer.print(sharedMemory.getWord(0, 0).word);
 				setSI((byte) 0);
+				break;
 			case 3:
 				System.out.println("HALT found. HALTING...");
 				setSI((byte) 0);
+				break;
 			case 4:
+				data = String.valueOf(R2).toCharArray();
+				address = R1;
+				block = address / 16;
+				offset = address % 16;
+				sharedMemory.writeBlock(data, block, offset);
 				setSI((byte) 0);
+				break;
 			case 5:
+				address = R1;
+				block = address / 16;
+				offset = address % 16;
+				data = sharedMemory.getWord(block, offset).word;
+				char[] newData = new char[data.length];
+				int c = 0;
+				for (int i = data.length-1; i >= 0 ; i--)
+				{
+					newData[c] = data[i];
+					c++;
+				}
+				for (int i = 0; i < data.length; ++i) {
+					if (newData[i] == '\0') {
+						newData[i] = '0';
+					}
+				}
+
+
+
+
+				R1 = Integer.parseInt(new String(newData));
 				setSI((byte) 0);
+				break;
 			default:
 				setSI((byte) 0);
 		}
-		clearSharedMemory();
 	}
 
 	private static void clearSharedMemory() {
 		sharedMemory = new SharedMemory();
 	}
 
-
-	//    @Override
 	public static String getInfo() {
 		return "+------------------+" + '\n' +
 				"|       RM         |" + '\n' +
